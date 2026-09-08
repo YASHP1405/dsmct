@@ -38,7 +38,3 @@ Recommand games, mini activeits and funny motivaltional video
 8. Using digital wellbeing  for stress detection:- 
 It is a feature implementation in which we can have an access to early builder models and the thigs and on that basis we can have a mood 
 
-Tech Stack:- 
-
-
-1. 

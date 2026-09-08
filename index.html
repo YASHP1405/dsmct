@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Online Assessment</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+
+        <div class="logo">
+            <span class="logo-icon">◆</span>
+            <div>
+                <h2>Online Assessment</h2>
+                <small>Secure Quiz Portal</small>
+            </div>
+        </div>
+
+        <div class="header-right">
+
+            <div class="timer">
+                <span>⏱</span>
+                <span id="timer">10:00</span>
+            </div>
+
+            <div class="question-count">
+                <span id="currentQuestion">1</span>
+                /
+                <span id="totalQuestions">5</span>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN -->
+    <main class="main-container">
+
+        <!-- CAMERA SECTION -->
+        <section class="camera-section">
+
+            <div class="card camera-card">
+
+                <div class="card-header">
+                    <h3>Proctoring</h3>
+
+                    <span id="cameraStatus" class="status inactive">
+                        Camera Off
+                    </span>
+                </div>
+
+                <div class="video-container">
+
+                    <video id="video" autoplay muted playsinline>
+                    </video>
+
+                    <canvas id="overlay"></canvas>
+
+                    <div id="cameraPlaceholder">
+                        <div class="camera-icon">📷</div>
+                        <p>Camera is not active</p>
+                        <button id="startCamera">
+                            Enable Camera
+                        </button>
+                    </div>
+
+                </div>
+
+
+                <!-- FACE STATUS -->
+
+                <div class="face-status">
+
+                    <div class="status-row">
+
+                        <span class="dot"></span>
+
+                        <span id="faceStatus">
+                            Waiting for camera...
+                        </span>
+
+                    </div>
+
+                    <div class="status-row">
+
+                        <span class="dot"></span>
+
+                        <span id="faceCount">
+                            Face count: 0
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div id="warningBox" class="warning-box hidden">
+                    ⚠️ Please keep your face visible in the camera.
+                </div>
+
+            </div>
+
+
+            <!-- PROCTORING INFORMATION -->
+
+            <div class="card rules-card">
+
+                <h3>Assessment Rules</h3>
+
+                <ul>
+
+                    <li>Keep your face visible.</li>
+
+                    <li>Do not switch tabs during the assessment.</li>
+
+                    <li>Do not close the camera.</li>
+
+                    <li>Answer each question before submitting.</li>
+
+                </ul>
+
+            </div>
+
+        </section>
+
+
+        <!-- QUIZ SECTION -->
+
+        <section class="quiz-section">
+
+            <div class="card quiz-card">
+
+                <div class="question-header">
+
+                    <div>
+                        <span class="question-label">
+                            Question
+                        </span>
+
+                        <h1 id="questionNumber">
+                            Question 1
+                        </h1>
+                    </div>
+
+                    <span id="questionType" class="question-type">
+                        MCQ
+                    </span>
+
+                </div>
+
+
+                <!-- PROGRESS -->
+
+                <div class="progress-container">
+
+                    <div class="progress-bar">
+
+                        <div id="progress" class="progress">
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- QUESTION -->
+
+                <div class="question-container">
+
+                    <h2 id="questionText">
+                        Loading question...
+                    </h2>
+
+
+                    <!-- MCQ -->
+
+                    <div id="mcqContainer" class="options">
+
+                    </div>
+
+
+                    <!-- TEXT ANSWER -->
+
+                    <div id="textContainer" class="text-answer hidden">
+
+                        <textarea id="textAnswer" placeholder="Type your answer here..."></textarea>
+
+                        <div class="character-count">
+                            <span id="charCount">0</span>
+                            characters
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- NAVIGATION -->
+
+                <div class="quiz-footer">
+
+                    <button id="previousBtn" class="btn secondary">
+                        ← Previous
+                    </button>
+
+                    <button id="submitBtn" class="btn primary">
+                        Submit Answer →
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- QUESTION NAVIGATION -->
+
+            <div class="card navigation-card">
+
+                <h3>Questions</h3>
+
+                <div id="questionNavigation" class="question-navigation">
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- RESULT MODAL -->
+
+    <div id="resultModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <div class="success-icon">
+                ✓
+            </div>
+
+            <h2>Assessment Completed</h2>
+
+            <p>
+                Your answers have been submitted successfully.
+            </p>
+
+            <div class="score">
+                <span id="score">0</span>
+                /
+                <span id="scoreTotal">5</span>
+            </div>
+
+            <button onclick="location.reload()" class="btn primary">
+                Take Again
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
