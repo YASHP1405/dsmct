@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DSMCT Secure Online Assessment Portal with AI-powered mood monitoring">
+    <title>Online Assessment — DSMCT</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
+
+    <style>
+        /* ── Mood Panel ─────────────────────────────────────── */
+        .mood-panel {
+            background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08));
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 16px;
+            padding: 1.2rem 1.4rem;
+            margin-top: 1rem;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        .mood-panel h4 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #a5b4fc;
+            margin-bottom: 0.8rem;
+        }
+
+        .emotion-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(99,102,241,0.25);
+            border-radius: 20px;
+            padding: 0.3rem 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #e0e7ff;
+            margin-bottom: 0.7rem;
+            transition: all 0.4s ease;
+        }
+
+        .emotion-emoji {
+            font-size: 1.1rem;
+        }
+
+        .stress-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .stress-label {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            min-width: 70px;
+        }
+
+        .stress-track {
+            flex: 1;
+            height: 8px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .stress-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.5s ease;
+            background: linear-gradient(90deg, #22d3ee, #818cf8, #f472b6);
+        }
+
+        .stress-value {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            min-width: 30px;
+            text-align: right;
+        }
+
+        .mood-note {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        .mood-scanning {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: #6366f1;
+            margin-top: 0.5rem;
+        }
+
+        .scan-dot {
+            width: 6px;
+            height: 6px;
+            background: #6366f1;
+            border-radius: 50%;
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.3; transform: scale(0.6); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .view-report-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.8rem;
+            padding: 0.45rem 1rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .view-report-btn:hover { opacity: 0.85; }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+
+        <div class="logo">
+            <span class="logo-icon">◆</span>
+            <div>
+                <h2>Online Assessment</h2>
+                <small>DSMCT · Secure Quiz Portal</small>
+            </div>
+        </div>
+
+        <div class="header-right">
+
+            <a href="/checkin" style="
+                display:inline-flex; align-items:center; gap:0.35rem;
+                padding:0.4rem 0.9rem; border-radius:8px; font-size:0.78rem;
+                font-weight:600; text-decoration:none; color:#a5b4fc;
+                background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.3);
+                transition:all 0.2s;" title="Daily Mood Check-In">
+                💬 Check-In
+            </a>
+
+            <div class="timer">
+                <span>⏱</span>
+                <span id="timer">10:00</span>
+            </div>
+
+            <div class="question-count">
+                <span id="currentQuestion">1</span>
+                /
+                <span id="totalQuestions">5</span>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN -->
+    <main class="main-container">
+
+        <!-- CAMERA SECTION -->
+        <section class="camera-section">
+
+            <div class="card camera-card">
+
+                <div class="card-header">
+                    <h3>Proctoring</h3>
+
+                    <span id="cameraStatus" class="status inactive">
+                        Camera Off
+                    </span>
+                </div>
+
+                <div class="video-container">
+
+                    <video id="video" autoplay muted playsinline>
+                    </video>
+
+                    <canvas id="overlay"></canvas>
+
+                    <div id="cameraPlaceholder">
+                        <div class="camera-icon">📷</div>
+                        <p>Camera is not active</p>
+                        <button id="startCamera">
+                            Enable Camera
+                        </button>
+                    </div>
+
+                </div>
+
+
+                <!-- FACE STATUS -->
+
+                <div class="face-status">
+
+                    <div class="status-row">
+                        <span class="dot"></span>
+                        <span id="faceStatus">Waiting for camera...</span>
+                    </div>
+
+                    <div class="status-row">
+                        <span class="dot"></span>
+                        <span id="faceCount">Face count: 0</span>
+                    </div>
+
+                </div>
+
+                <div id="warningBox" class="warning-box hidden">
+                    ⚠️ Please keep your face visible in the camera.
+                </div>
+
+
+                <!-- AI MOOD PANEL -->
+                <div class="mood-panel" id="moodPanel">
+                    <h4>🧠 AI Mood Analysis</h4>
+
+                    <div class="emotion-badge" id="emotionBadge">
+                        <span class="emotion-emoji" id="emotionEmoji">😐</span>
+                        <span id="emotionLabel">Waiting...</span>
+                    </div>
+
+                    <div class="stress-bar-wrap">
+                        <span class="stress-label">Stress Level</span>
+                        <div class="stress-track">
+                            <div class="stress-fill" id="stressFill" style="width:0%"></div>
+                        </div>
+                        <span class="stress-value" id="stressValue">—</span>
+                    </div>
+
+                    <p class="mood-note" id="moodNote">Enable camera to begin mood analysis.</p>
+
+                    <div class="mood-scanning hidden" id="moodScanning">
+                        <span class="scan-dot"></span>
+                        Analysing facial expression…
+                    </div>
+
+                    <a href="/report" target="_blank" class="view-report-btn" id="reportBtn" style="display:none">
+                        📊 View Session Report
+                    </a>
+                </div>
+
+            </div>
+
+
+            <!-- PROCTORING INFORMATION -->
+
+            <div class="card rules-card">
+
+                <h3>Assessment Rules</h3>
+
+                <ul>
+                    <li>Keep your face visible.</li>
+                    <li>Do not switch tabs during the assessment.</li>
+                    <li>Do not close the camera.</li>
+                    <li>Answer each question before submitting.</li>
+                </ul>
+
+            </div>
+
+        </section>
+
+
+        <!-- QUIZ SECTION -->
+
+        <section class="quiz-section">
+
+            <div class="card quiz-card">
+
+                <div class="question-header">
+
+                    <div>
+                        <span class="question-label">Question</span>
+                        <h1 id="questionNumber">Question 1</h1>
+                    </div>
+
+                    <span id="questionType" class="question-type">MCQ</span>
+
+                </div>
+
+
+                <!-- PROGRESS -->
+
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progress" class="progress"></div>
+                    </div>
+                </div>
+
+
+                <!-- QUESTION -->
+
+                <div class="question-container">
+
+                    <h2 id="questionText">Loading question...</h2>
+
+                    <!-- MCQ -->
+                    <div id="mcqContainer" class="options"></div>
+
+                    <!-- TEXT ANSWER -->
+                    <div id="textContainer" class="text-answer hidden">
+                        <textarea id="textAnswer" placeholder="Type your answer here..."></textarea>
+                        <div class="character-count">
+                            <span id="charCount">0</span> characters
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <!-- NAVIGATION -->
+
+                <div class="quiz-footer">
+
+                    <button id="previousBtn" class="btn secondary">
+                        ← Previous
+                    </button>
+
+                    <button id="submitBtn" class="btn primary">
+                        Submit Answer →
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- QUESTION NAVIGATION -->
+
+            <div class="card navigation-card">
+                <h3>Questions</h3>
+                <div id="questionNavigation" class="question-navigation"></div>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- RESULT MODAL -->
+
+    <div id="resultModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <div class="success-icon">✓</div>
+
+            <h2>Check-In Complete!</h2>
+
+            <p>
+                Your responses have been recorded.<br>
+                <small style="color:#94a3b8">
+                    <span id="score">0</span>/<span id="scoreTotal">5</span>
+                    questions answered
+                </small>
+            </p>
+
+            <a href="/report" class="btn primary" style="text-decoration:none; display:inline-block; margin-top:1rem;">
+                📊 View Mood Report
+            </a>
+
+            <a href="/checkin" class="btn primary" style="text-decoration:none; display:inline-block; margin-top:0.5rem;
+                background:linear-gradient(135deg,#10b981,#22d3ee);">
+                💬 Daily Check-In
+            </a>
+
+            <button onclick="location.reload()" class="btn secondary" style="margin-top:0.5rem">
+                🔄 Retake
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+
+</html>

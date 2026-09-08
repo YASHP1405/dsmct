@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DSMCT Student Mood & Stress Tracker — Home">
+    <title>DSMCT — Student Mood & Stress Tracker</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f0f1a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .hero {
+            text-align: center;
+            max-width: 620px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(99,102,241,0.18);
+            border: 1px solid rgba(99,102,241,0.4);
+            border-radius: 99px;
+            padding: 0.35rem 1rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #a5b4fc;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #e0e7ff, #a5b4fc, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.05rem;
+            color: #94a3b8;
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.85rem 2rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .cta-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            box-shadow: 0 4px 24px rgba(99,102,241,0.35);
+        }
+
+        .cta-secondary {
+            background: rgba(255,255,255,0.06);
+            color: #e2e8f0;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(99,102,241,0.4); }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-top: 3rem;
+            max-width: 620px;
+            width: 100%;
+        }
+
+        .feature-chip {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.82rem;
+            color: #94a3b8;
+        }
+
+        .feature-chip span { display: block; font-size: 1.5rem; margin-bottom: 0.4rem; }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <div class="hero-badge">🎓 DSMCT Platform</div>
+
+        <h1>Student Mood &amp;<br>Stress Tracker</h1>
+
+        <p>
+            AI-powered emotional wellness monitoring during assessments.
+            Track how you feel, detect stress patterns, and get personalised support.
+        </p>
+
+        <div class="cta-group">
+            <a href="/quiz" class="cta-btn cta-primary">
+                🎯 Start Assessment
+            </a>
+            <a href="/checkin" class="cta-btn cta-secondary">
+                💬 Mood Check-In
+            </a>
+            <a href="/report" class="cta-btn cta-secondary">
+                📊 View Report
+            </a>
+        </div>
+    </div>
+
+    <div class="features">
+        <div class="feature-chip">
+            <span>🤖</span>
+            AI Emotion Detection
+        </div>
+        <div class="feature-chip">
+            <span>💬</span>
+            Mood Check-In
+        </div>
+        <div class="feature-chip">
+            <span>📈</span>
+            Mood Analytics
+        </div>
+        <div class="feature-chip">
+            <span>🔒</span>
+            Secure Proctoring
+        </div>
+        <div class="feature-chip">
+            <span>🧘</span>
+            Wellness Tips
+        </div>
+    </div>
+
+</body>
+</html>

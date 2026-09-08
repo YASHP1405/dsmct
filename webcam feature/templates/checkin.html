@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DSMCT Daily Mood Check-In — How are you feeling today?">
+    <title>Mood Check-In — DSMCT</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:       #090912;
+            --surface:  #111120;
+            --surface2: #18182e;
+            --border:   rgba(255,255,255,0.07);
+            --primary:  #6366f1;
+            --p2:       #8b5cf6;
+            --accent:   #22d3ee;
+            --text:     #e2e8f0;
+            --muted:    #64748b;
+            --radius:   20px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Header ─────────────────────────── */
+        .header {
+            padding: 1.1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(9,9,18,0.8);
+            backdrop-filter: blur(12px);
+            position: sticky; top: 0; z-index: 10;
+        }
+
+        .logo { display: flex; align-items: center; gap: 0.7rem; }
+        .logo-icon { font-size: 1.4rem; }
+        .logo h2 { font-size: 1rem; font-weight: 700;
+            background: linear-gradient(135deg, #e0e7ff, #a5b4fc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo small { color: var(--muted); font-size: 0.72rem; display: block; }
+
+        .header-links { display: flex; gap: 0.7rem; }
+        .nav-link {
+            padding: 0.4rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-decoration: none;
+            color: var(--muted);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+
+        /* ── Main layout ─────────────────────── */
+        .main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem 4rem;
+        }
+
+        .checkin-wrap {
+            width: 100%;
+            max-width: 640px;
+        }
+
+        /* ── Intro card ──────────────────────── */
+        .intro-card {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+            animation: fadeUp 0.5s ease;
+        }
+
+        .intro-avatar {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--p2));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 1rem;
+            box-shadow: 0 0 32px rgba(99,102,241,0.4);
+        }
+
+        .intro-card h1 {
+            font-size: 1.5rem; font-weight: 800;
+            background: linear-gradient(135deg, #e0e7ff, #a5b4fc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .intro-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+
+        /* ── Progress bar ────────────────────── */
+        .progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .progress-track {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--p2));
+            border-radius: 99px;
+            transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        .progress-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        /* ── Chat bubbles ────────────────────── */
+        .chat-log {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+            min-height: 60px;
+        }
+
+        .bubble {
+            display: flex;
+            gap: 0.6rem;
+            align-items: flex-end;
+            animation: fadeUp 0.35s ease;
+        }
+
+        .bubble.bot { justify-content: flex-start; }
+        .bubble.user { justify-content: flex-end; }
+
+        .bubble-avatar {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--p2));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .bubble-text {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .bubble.bot .bubble-text {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+            color: var(--text);
+        }
+
+        .bubble.user .bubble-text {
+            background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.2));
+            border: 1px solid rgba(99,102,241,0.3);
+            border-bottom-right-radius: 4px;
+            color: #e0e7ff;
+        }
+
+        /* ── Question card ───────────────────── */
+        .question-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.8rem;
+            animation: fadeUp 0.4s ease;
+        }
+
+        .q-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #a5b4fc;
+            margin-bottom: 0.6rem;
+        }
+
+        .q-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 1.4rem;
+            line-height: 1.5;
+        }
+
+        /* Text input */
+        .q-textarea {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            resize: none;
+            height: 90px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .q-textarea:focus { border-color: rgba(99,102,241,0.5); }
+        .q-textarea::placeholder { color: var(--muted); }
+
+        /* Slider */
+        .slider-wrap { padding: 0.5rem 0 1rem; }
+
+        .q-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 99px;
+            background: linear-gradient(90deg,
+                #10b981 0%, #22d3ee 30%, #f59e0b 60%, #f43f5e 100%);
+            outline: none;
+            margin-bottom: 0.5rem;
+        }
+
+        .q-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .q-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+
+        .slider-value-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--p2));
+            color: white;
+            border-radius: 8px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+        }
+
+        /* Option chips */
+        .chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .chip {
+            padding: 0.55rem 1.1rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            font-size: 0.85rem;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chip:hover { border-color: rgba(99,102,241,0.4); color: var(--text); }
+
+        .chip.selected {
+            background: rgba(99,102,241,0.2);
+            border-color: var(--primary);
+            color: #e0e7ff;
+            font-weight: 600;
+        }
+
+        /* Emoji rating */
+        .emoji-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+
+        .emoji-opt {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            padding: 0.6rem;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            flex: 1;
+        }
+
+        .emoji-opt:hover { background: rgba(255,255,255,0.04); }
+        .emoji-opt.selected { background: rgba(99,102,241,0.15); border-color: var(--primary); }
+
+        .emoji-opt .em { font-size: 1.8rem; }
+        .emoji-opt .em-label { font-size: 0.65rem; color: var(--muted); font-weight: 500; }
+        .emoji-opt.selected .em-label { color: #a5b4fc; }
+
+        /* Next button */
+        .next-btn {
+            width: 100%;
+            padding: 0.9rem;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--p2));
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 1.2rem;
+            transition: opacity 0.2s, transform 0.15s;
+            box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+        }
+
+        .next-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+        .next-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── Result card ─────────────────────── */
+        .result-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            animation: fadeUp 0.5s ease;
+            display: none;
+        }
+
+        .result-header { text-align: center; margin-bottom: 1.8rem; }
+        .result-header h2 {
+            font-size: 1.4rem; font-weight: 800;
+            background: linear-gradient(135deg, #e0e7ff, #a5b4fc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 0.4rem;
+        }
+        .result-header p { color: var(--muted); font-size: 0.85rem; }
+
+        .wellness-index {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1.8rem;
+        }
+
+        .wi-ring {
+            position: relative;
+            width: 120px; height: 120px;
+            margin-bottom: 0.8rem;
+        }
+
+        .wi-ring svg { transform: rotate(-90deg); }
+
+        .wi-ring-label {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wi-score {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .wi-out { font-size: 0.72rem; color: var(--muted); }
+
+        .wi-category {
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.3rem 1rem;
+            border-radius: 99px;
+            background: rgba(99,102,241,0.15);
+            color: #a5b4fc;
+            border: 1px solid rgba(99,102,241,0.3);
+        }
+
+        /* Factor breakdown */
+        .factors {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .factor-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+        }
+
+        .factor-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .factor-value {
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .factor-sub { font-size: 0.72rem; color: var(--muted); }
+
+        /* AI insight */
+        .ai-insight {
+            background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.05));
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 14px;
+            padding: 1.2rem 1.4rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .ai-insight-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #a5b4fc;
+        }
+
+        .ai-insight p {
+            font-size: 0.88rem;
+            color: #cbd5e1;
+            line-height: 1.75;
+        }
+
+        /* Recommendations */
+        .recs { margin-bottom: 1.5rem; }
+        .recs-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--muted);
+            margin-bottom: 0.8rem;
+        }
+
+        .rec-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .rec-item:last-child { border-bottom: none; }
+        .rec-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+        .result-actions {
+            display: flex;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .action-primary {
+            background: linear-gradient(135deg, var(--primary), var(--p2));
+            color: white;
+        }
+
+        .action-secondary {
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        /* Loading */
+        .loading-state {
+            text-align: center;
+            padding: 2rem;
+            display: none;
+        }
+
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(99,102,241,0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .loading-state p { color: var(--muted); font-size: 0.88rem; }
+
+        /* Typing indicator */
+        .typing {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 0.6rem 0.9rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+        }
+
+        .typing span {
+            width: 7px; height: 7px;
+            background: var(--muted);
+            border-radius: 50%;
+            animation: bounce 1.2s ease infinite;
+        }
+
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+            40%            { transform: translateY(-6px); opacity: 1; }
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo">
+            <span class="logo-icon">◆</span>
+            <div>
+                <h2>DSMCT</h2>
+                <small>Daily Mood Check-In</small>
+            </div>
+        </div>
+        <div class="header-links">
+            <a href="/quiz" class="nav-link">🎯 Quiz</a>
+            <a href="/report" class="nav-link">📊 Report</a>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="checkin-wrap">
+
+            <!-- Intro card -->
+            <div class="intro-card" id="introCard">
+                <div class="intro-avatar">🤖</div>
+                <h1>How are you doing today?</h1>
+                <p>I'll ask you 5 quick questions about your mood and day.<br>
+                   Your answers help generate a personalised wellness report.</p>
+                <button class="next-btn" id="startBtn" style="margin-top:1.5rem" onclick="startCheckin()">
+                    Let's Begin →
+                </button>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-wrap" id="progressWrap" style="display:none">
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                </div>
+                <span class="progress-label" id="progressLabel">0 / 5</span>
+            </div>
+
+            <!-- Chat log -->
+            <div class="chat-log" id="chatLog"></div>
+
+            <!-- Active question card -->
+            <div class="question-card" id="questionCard" style="display:none"></div>
+
+            <!-- Loading -->
+            <div class="loading-state" id="loadingState">
+                <div class="spinner"></div>
+                <p>Analysing your responses with AI…</p>
+            </div>
+
+            <!-- Result -->
+            <div class="result-card" id="resultCard"></div>
+
+        </div>
+    </main>
+
+
+    <script>
+    /* ================================================================
+       DSMCT — Mood Check-In Page
+    ================================================================ */
+
+    const QUESTIONS = [
+        {
+            id: "day_feeling",
+            type: "emoji_rate",
+            label: "Question 1 of 5",
+            text: "Overall, how would you describe your day so far?",
+            options: [
+                { emoji: "😫", label: "Rough",    value: "rough" },
+                { emoji: "😞", label: "Tough",    value: "tough" },
+                { emoji: "😐", label: "Okay",     value: "okay" },
+                { emoji: "🙂", label: "Good",     value: "good" },
+                { emoji: "😄", label: "Great",    value: "great" },
+            ]
+        },
+        {
+            id: "stress_level",
+            type: "slider",
+            label: "Question 2 of 5",
+            text: "On a scale of 1–10, how stressed are you feeling right now?",
+            min: 1, max: 10, default: 5,
+            lowLabel: "1 — Very Relaxed",
+            highLabel: "10 — Extremely Stressed"
+        },
+        {
+            id: "main_worry",
+            type: "text",
+            label: "Question 3 of 5",
+            text: "What's been on your mind the most today? (exams, assignments, something personal?)",
+            placeholder: "Type anything — this is private and helps the AI understand your stress context…"
+        },
+        {
+            id: "sleep_quality",
+            type: "chips",
+            label: "Question 4 of 5",
+            text: "How well did you sleep last night?",
+            options: [
+                { label: "😴 Very well (7–9 hrs)",  value: "very_well" },
+                { label: "🙂 Okay (5–7 hrs)",       value: "okay" },
+                { label: "😕 Poorly (3–5 hrs)",     value: "poorly" },
+                { label: "😵 Barely slept (<3 hrs)", value: "barely" },
+            ]
+        },
+        {
+            id: "support_needed",
+            type: "chips",
+            label: "Question 5 of 5",
+            text: "Right now, what kind of support would help you the most?",
+            options: [
+                { label: "🧘 Calm & relax tips",   value: "calm" },
+                { label: "📚 Study strategies",    value: "study" },
+                { label: "💬 Someone to talk to",  value: "talk" },
+                { label: "🎮 Fun distraction",     value: "fun" },
+                { label: "💤 Rest & recovery",     value: "rest" },
+            ]
+        }
+    ];
+
+    const TOTAL = QUESTIONS.length;
+    let currentQ = 0;
+    let answers  = {};
+    let selectedValue = null;
+
+
+    /* ── Render helpers ─────────────────────────────────── */
+
+    function startCheckin() {
+        document.getElementById("introCard").style.display = "none";
+        document.getElementById("progressWrap").style.display = "flex";
+        renderQuestion(0);
+    }
+
+
+    function renderQuestion(index) {
+        currentQ     = index;
+        selectedValue = null;
+        updateProgress(index);
+
+        const q    = QUESTIONS[index];
+        const card = document.getElementById("questionCard");
+
+        card.style.display = "block";
+        card.style.animation = "none";
+        void card.offsetWidth;   // force reflow
+        card.style.animation = "fadeUp 0.4s ease";
+
+        let inputHTML = "";
+
+        if (q.type === "emoji_rate") {
+            inputHTML = `
+                <div class="emoji-row" id="emojiRow">
+                    ${q.options.map((o, i) => `
+                        <div class="emoji-opt" data-value="${o.value}" onclick="selectEmoji(this, '${o.value}')">
+                            <span class="em">${o.emoji}</span>
+                            <span class="em-label">${o.label}</span>
+                        </div>`).join("")}
+                </div>`;
+        }
+
+        else if (q.type === "slider") {
+            inputHTML = `
+                <div class="slider-wrap">
+                    <div class="slider-value-badge" id="sliderBadge">${q.default}/10</div>
+                    <input type="range" class="q-slider" id="sliderInput"
+                        min="${q.min}" max="${q.max}" value="${q.default}"
+                        oninput="updateSlider(this.value)">
+                    <div class="slider-labels">
+                        <span>${q.lowLabel}</span>
+                        <span>${q.highLabel}</span>
+                    </div>
+                </div>`;
+            selectedValue = String(q.default);
+        }
+
+        else if (q.type === "text") {
+            inputHTML = `
+                <textarea class="q-textarea" id="textInput"
+                    placeholder="${q.placeholder}"
+                    oninput="onTextInput(this.value)"></textarea>`;
+        }
+
+        else if (q.type === "chips") {
+            inputHTML = `
+                <div class="chips-wrap" id="chipsWrap">
+                    ${q.options.map(o => `
+                        <div class="chip" data-value="${o.value}" onclick="selectChip(this, '${o.value}')">
+                            ${o.label}
+                        </div>`).join("")}
+                </div>`;
+        }
+
+        card.innerHTML = `
+            <div class="q-label">${q.label}</div>
+            <div class="q-text">${q.text}</div>
+            ${inputHTML}
+            <button class="next-btn" id="nextBtn"
+                ${q.type === "slider" ? "" : "disabled"}
+                onclick="submitAnswer()">
+                ${index < TOTAL - 1 ? "Next →" : "Get My Wellness Report 🚀"}
+            </button>`;
+    }
+
+
+    /* ── Input handlers ─────────────────────────────── */
+
+    function selectEmoji(el, value) {
+        document.querySelectorAll(".emoji-opt").forEach(e => e.classList.remove("selected"));
+        el.classList.add("selected");
+        selectedValue = value;
+        document.getElementById("nextBtn").disabled = false;
+    }
+
+    function updateSlider(value) {
+        document.getElementById("sliderBadge").textContent = `${value}/10`;
+        selectedValue = value;
+    }
+
+    function onTextInput(value) {
+        selectedValue = value.trim();
+        document.getElementById("nextBtn").disabled = value.trim().length < 3;
+    }
+
+    function selectChip(el, value) {
+        document.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
+        el.classList.add("selected");
+        selectedValue = value;
+        document.getElementById("nextBtn").disabled = false;
+    }
+
+
+    /* ── Submit answer ──────────────────────────────── */
+
+    function submitAnswer() {
+        const q = QUESTIONS[currentQ];
+        answers[q.id] = selectedValue;
+
+        // Push to chat log
+        addBotBubble(q.text);
+        addUserBubble(formatAnswer(q, selectedValue));
+
+        if (currentQ < TOTAL - 1) {
+            // Brief typing pause before next question
+            document.getElementById("questionCard").style.display = "none";
+            showTyping(800, () => renderQuestion(currentQ + 1));
+        } else {
+            // Final — submit to backend
+            document.getElementById("questionCard").style.display = "none";
+            submitCheckin();
+        }
+    }
+
+
+    function formatAnswer(q, value) {
+        if (q.type === "slider")    return `Stress level: ${value}/10`;
+        if (q.type === "emoji_rate") return q.options.find(o => o.value === value)?.label || value;
+        if (q.type === "chips")     return q.options.find(o => o.value === value)?.label || value;
+        return value;
+    }
+
+
+    /* ── Chat log helpers ───────────────────────────── */
+
+    function addBotBubble(text) {
+        const log  = document.getElementById("chatLog");
+        const wrap = document.createElement("div");
+        wrap.className = "bubble bot";
+        wrap.innerHTML = `
+            <div class="bubble-avatar">🤖</div>
+            <div class="bubble-text">${text}</div>`;
+        log.appendChild(wrap);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function addUserBubble(text) {
+        const log  = document.getElementById("chatLog");
+        const wrap = document.createElement("div");
+        wrap.className = "bubble user";
+        wrap.innerHTML = `<div class="bubble-text">${text}</div>`;
+        log.appendChild(wrap);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function showTyping(ms, callback) {
+        const log  = document.getElementById("chatLog");
+        const wrap = document.createElement("div");
+        wrap.className = "bubble bot";
+        wrap.id = "typingBubble";
+        wrap.innerHTML = `
+            <div class="bubble-avatar">🤖</div>
+            <div class="typing"><span></span><span></span><span></span></div>`;
+        log.appendChild(wrap);
+        log.scrollTop = log.scrollHeight;
+        setTimeout(() => {
+            wrap.remove();
+            callback();
+        }, ms);
+    }
+
+
+    /* ── Progress ───────────────────────────────────── */
+
+    function updateProgress(index) {
+        const pct = (index / TOTAL) * 100;
+        document.getElementById("progressFill").style.width = `${pct}%`;
+        document.getElementById("progressLabel").textContent = `${index} / ${TOTAL}`;
+    }
+
+
+    /* ── Submit to Flask ────────────────────────────── */
+
+    async function submitCheckin() {
+        document.getElementById("loadingState").style.display = "block";
+        document.getElementById("progressWrap").style.display = "none";
+
+        try {
+            const res  = await fetch("/analyze-checkin", {
+                method:  "POST",
+                headers: { "Content-Type": "application/json" },
+                body:    JSON.stringify({ answers })
+            });
+            const data = await res.json();
+            renderResult(data);
+        } catch (err) {
+            console.error(err);
+            document.getElementById("loadingState").innerHTML =
+                `<p style="color:#f43f5e">Something went wrong. <a href="/checkin" style="color:#818cf8">Try again</a></p>`;
+        }
+    }
+
+
+    /* ── Render result ──────────────────────────────── */
+
+    function renderResult(data) {
+        document.getElementById("loadingState").style.display = "none";
+
+        const wi      = data.wellness_index ?? 50;
+        const stress  = data.stress_score   ?? 5;
+        const mood    = data.mood_category  ?? "Moderate";
+        const insight = data.insight        ?? "";
+        const recs    = data.recommendations ?? [];
+        const face_s  = data.face_score;
+
+        // Ring color by wellness index
+        const ringColor = wi >= 70 ? "#10b981" : wi >= 45 ? "#f59e0b" : "#f43f5e";
+        const circumference = 2 * Math.PI * 52;
+        const dash = circumference * (wi / 100);
+
+        const recIcons = ["🧘", "📚", "💤", "🎮", "🌿", "💬", "🎵", "🏃", "🍵", "😊"];
+
+        const card = document.getElementById("resultCard");
+        card.style.display = "block";
+        card.innerHTML = `
+            <div class="result-header">
+                <h2>Your Wellness Report</h2>
+                <p>Based on your answers today</p>
+            </div>
+
+            <!-- Wellness Index Ring -->
+            <div class="wellness-index">
+                <div class="wi-ring">
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="52" fill="none"
+                            stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+                        <circle cx="60" cy="60" r="52" fill="none"
+                            stroke="${ringColor}" stroke-width="10"
+                            stroke-dasharray="${dash} ${circumference}"
+                            stroke-linecap="round"
+                            style="transition: stroke-dasharray 1s ease"/>
+                    </svg>
+                    <div class="wi-ring-label">
+                        <span class="wi-score" style="color:${ringColor}">${wi}</span>
+                        <span class="wi-out">/100</span>
+                    </div>
+                </div>
+                <span class="wi-category">${mood} Wellness</span>
+            </div>
+
+            <!-- Factor breakdown -->
+            <div class="factors">
+                <div class="factor-card">
+                    <div class="factor-label">Stress Score</div>
+                    <div class="factor-value" style="color:${stress <= 4 ? '#10b981' : stress <= 7 ? '#f59e0b' : '#f43f5e'}">${stress}<span style="font-size:1rem;font-weight:400;color:#64748b">/10</span></div>
+                    <div class="factor-sub">From your answers</div>
+                </div>
+                <div class="factor-card">
+                    <div class="factor-label">Day Feeling</div>
+                    <div class="factor-value" style="font-size:1.5rem">${getDayEmoji(answers.day_feeling)}</div>
+                    <div class="factor-sub">${capitalize(answers.day_feeling || "—")}</div>
+                </div>
+                <div class="factor-card">
+                    <div class="factor-label">Sleep Quality</div>
+                    <div class="factor-value" style="font-size:1.5rem">${getSleepEmoji(answers.sleep_quality)}</div>
+                    <div class="factor-sub">${formatSleep(answers.sleep_quality)}</div>
+                </div>
+                <div class="factor-card">
+                    <div class="factor-label">Face Reading</div>
+                    <div class="factor-value" style="color:#a5b4fc;font-size:1.3rem">
+                        ${face_s != null ? face_s + '/10' : 'N/A'}
+                    </div>
+                    <div class="factor-sub">${face_s != null ? 'Camera detected' : 'No face data'}</div>
+                </div>
+            </div>
+
+            <!-- AI Insight -->
+            <div class="ai-insight">
+                <div class="ai-insight-header">🤖 AI Wellness Insight</div>
+                <p>${insight}</p>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="recs">
+                <div class="recs-title">✨ Personalised Recommendations</div>
+                ${recs.map((r, i) => `
+                    <div class="rec-item">
+                        <span class="rec-icon">${recIcons[i % recIcons.length]}</span>
+                        <span>${r}</span>
+                    </div>`).join("")}
+            </div>
+
+            <!-- Actions -->
+            <div class="result-actions">
+                <a href="/report" class="action-btn action-primary">📊 Full Analytics Report</a>
+                <a href="/quiz" class="action-btn action-secondary">🎯 Start Quiz</a>
+                <button class="action-btn action-secondary" onclick="location.reload()">🔄 Check-In Again</button>
+            </div>`;
+
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+
+    /* ── Helpers ─────────────────────────────────────── */
+
+    function getDayEmoji(v) {
+        const map = { rough:"😫", tough:"😞", okay:"😐", good:"🙂", great:"😄" };
+        return map[v] ?? "😐";
+    }
+
+    function getSleepEmoji(v) {
+        const map = { very_well:"😴", okay:"🙂", poorly:"😕", barely:"😵" };
+        return map[v] ?? "😴";
+    }
+
+    function formatSleep(v) {
+        const map = { very_well:"Very well", okay:"Okay", poorly:"Poorly", barely:"Barely slept" };
+        return map[v] ?? "—";
+    }
+
+    function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : "—"; }
+
+    </script>
+</body>
+</html>

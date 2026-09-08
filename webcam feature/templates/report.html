@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DSMCT Session Mood Analytics Report">
+    <title>Mood Analytics — DSMCT</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Chart.js Annotation plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+
+    <style>
+        /* ── Reset & base ─────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #0b0b18;
+            --surface:   #12121f;
+            --surface2:  #1a1a2e;
+            --border:    rgba(255,255,255,0.08);
+            --primary:   #6366f1;
+            --primary2:  #8b5cf6;
+            --accent:    #22d3ee;
+            --danger:    #f43f5e;
+            --success:   #10b981;
+            --warn:      #f59e0b;
+            --text:      #e2e8f0;
+            --muted:     #64748b;
+            --radius:    16px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 4rem;
+        }
+
+        /* ── Header ──────────────────────────────────────── */
+        .page-header {
+            background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.08));
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .page-header .logo-icon {
+            font-size: 1.6rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e0e7ff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header small { color: var(--muted); font-size: 0.78rem; }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1.1rem;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover { background: rgba(255,255,255,0.1); }
+
+        /* ── Layout ──────────────────────────────────────── */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* ── Summary Cards ───────────────────────────────── */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.4rem 1.6rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: var(--grad, linear-gradient(90deg, var(--primary), var(--primary2)));
+        }
+
+        .stat-card:hover { transform: translateY(-3px); }
+
+        .stat-icon {
+            font-size: 1.6rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-value {
+            font-size: 1.9rem;
+            font-weight: 800;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .stat-sub {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 0.25rem;
+        }
+
+        /* ── Charts Grid ─────────────────────────────────── */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 700px) {
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #a5b4fc;
+            margin-bottom: 1.2rem;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 220px;
+        }
+
+        .chart-wrap.tall {
+            height: 280px;
+        }
+
+        /* ── AI Summary Card ─────────────────────────────── */
+        .ai-card {
+            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.06));
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: var(--radius);
+            padding: 1.6rem 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-card-header h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #a5b4fc;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .ai-spinner {
+            width: 16px; height: 16px;
+            border: 2px solid rgba(99,102,241,0.3);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .ai-text {
+            font-size: 0.92rem;
+            color: #cbd5e1;
+            line-height: 1.75;
+            white-space: pre-wrap;
+        }
+
+        /* ── Timeline Table ──────────────────────────────── */
+        .timeline-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .timeline-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        .timeline-table th {
+            text-align: left;
+            padding: 0.6rem 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.68rem;
+            letter-spacing: 0.07em;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timeline-table td {
+            padding: 0.65rem 0.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: var(--text);
+        }
+
+        .timeline-table tr:last-child td { border-bottom: none; }
+
+        .timeline-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+        .stress-pill {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 99px;
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+
+        /* ── Empty State ─────────────────────────────────── */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--muted);
+        }
+
+        .empty-state .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .empty-state h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .empty-state p  { font-size: 0.9rem; }
+        .empty-state a  { color: var(--primary); }
+
+        /* ── Loading overlay ─────────────────────────────── */
+        #loadingOverlay {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            z-index: 999;
+            transition: opacity 0.4s;
+        }
+
+        .big-spinner {
+            width: 48px; height: 48px;
+            border: 4px solid rgba(99,102,241,0.2);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        #loadingOverlay p { color: var(--muted); font-size: 0.9rem; }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+        <div class="big-spinner"></div>
+        <p>Loading your mood report…</p>
+    </div>
+
+    <!-- HEADER -->
+    <header class="page-header">
+        <div class="logo">
+            <span class="logo-icon">◆</span>
+            <div>
+                <h1>Mood Analytics Report</h1>
+                <small>DSMCT · Session Insights</small>
+            </div>
+        </div>
+        <a href="/quiz" class="back-btn">← Back to Quiz</a>
+    </header>
+
+    <div class="container" id="reportContainer" style="display:none">
+
+        <!-- EMPTY STATE (shown if no data) -->
+        <div class="empty-state" id="emptyState" style="display:none">
+            <div class="empty-icon">📭</div>
+            <h2>No session data yet</h2>
+            <p>Complete a quiz with the camera enabled to see your mood report.<br>
+               <a href="/quiz">Start the assessment →</a>
+            </p>
+        </div>
+
+        <!-- REPORT CONTENT (shown when data exists) -->
+        <div id="reportContent" style="display:none">
+
+            <!-- AI Summary -->
+            <div class="ai-card">
+                <div class="ai-card-header">
+                    <span>🤖</span>
+                    <h3>AI Wellness Summary</h3>
+                    <div class="ai-spinner" id="aiSpinner"></div>
+                </div>
+                <p class="ai-text" id="aiSummaryText">Generating personalised wellness insight…</p>
+            </div>
+
+
+            <!-- STAT CARDS -->
+            <div class="summary-grid">
+
+                <div class="stat-card" style="--grad: linear-gradient(90deg,#6366f1,#8b5cf6)">
+                    <div class="stat-icon">📸</div>
+                    <div class="stat-label">Total Snapshots</div>
+                    <div class="stat-value" id="statSnapshots">—</div>
+                    <div class="stat-sub">mood readings captured</div>
+                </div>
+
+                <div class="stat-card" style="--grad: linear-gradient(90deg,#22d3ee,#6366f1)">
+                    <div class="stat-icon">😌</div>
+                    <div class="stat-label">Avg Stress Score</div>
+                    <div class="stat-value" id="statAvgStress">—</div>
+                    <div class="stat-sub">out of 10</div>
+                </div>
+
+                <div class="stat-card" style="--grad: linear-gradient(90deg,#f43f5e,#f97316)">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-label">Peak Stress</div>
+                    <div class="stat-value" id="statPeakStress">—</div>
+                    <div class="stat-sub">highest recorded</div>
+                </div>
+
+                <div class="stat-card" style="--grad: linear-gradient(90deg,#10b981,#22d3ee)">
+                    <div class="stat-icon">🎭</div>
+                    <div class="stat-label">Dominant Emotion</div>
+                    <div class="stat-value" id="statDominant" style="font-size:1.3rem">—</div>
+                    <div class="stat-sub">most frequent mood</div>
+                </div>
+
+            </div>
+
+
+            <!-- CHARTS ROW 1 -->
+            <div class="charts-grid">
+
+                <!-- Stress Over Time (line) -->
+                <div class="chart-card full-width">
+                    <div class="chart-title">📈 Stress Level Over Time</div>
+                    <div class="chart-wrap tall">
+                        <canvas id="stressTimeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Emotion Distribution (doughnut) -->
+                <div class="chart-card">
+                    <div class="chart-title">🎭 Emotion Distribution</div>
+                    <div class="chart-wrap">
+                        <canvas id="emotionPieChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Emotion vs Stress (bar) -->
+                <div class="chart-card">
+                    <div class="chart-title">📊 Avg Stress by Emotion</div>
+                    <div class="chart-wrap">
+                        <canvas id="emotionStressBar"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Stress Gauge (radial fill via doughnut) -->
+            <div class="charts-grid" style="grid-template-columns: 1fr 2fr;">
+
+                <div class="chart-card">
+                    <div class="chart-title">🎯 Stress Gauge</div>
+                    <div class="chart-wrap">
+                        <canvas id="stressGauge"></canvas>
+                    </div>
+                </div>
+
+                <!-- Mood Heatmap per question (horizontal bar) -->
+                <div class="chart-card">
+                    <div class="chart-title">🗂 Stress per Question</div>
+                    <div class="chart-wrap">
+                        <canvas id="questionStressBar"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- TIMELINE TABLE -->
+            <div class="timeline-card">
+                <div class="chart-title" style="margin-bottom:1rem">🕐 Mood Timeline</div>
+                <table class="timeline-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Time</th>
+                            <th>Question</th>
+                            <th>Emotion</th>
+                            <th>Stress</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timelineBody"></tbody>
+                </table>
+            </div>
+
+        </div><!-- /reportContent -->
+
+    </div><!-- /container -->
+
+
+    <script>
+        /* ================================================================
+           DSMCT — Report Page JavaScript
+           Fetches /session-report and renders all charts + table
+        ================================================================ */
+
+        const EMOTION_EMOJI = {
+            happy: "😄", calm: "😌", neutral: "😐", focused: "🎯",
+            confused: "😕", tired: "😴", sad: "😢", worried: "😟",
+            anxious: "😰", stressed: "😫", fearful: "😨", angry: "😤",
+            unknown: "❓",
+        };
+
+        const STRESS_COLORS = (score) => {
+            if (score <= 3)  return "#10b981";   // green
+            if (score <= 5)  return "#22d3ee";   // cyan
+            if (score <= 7)  return "#f59e0b";   // amber
+            return "#f43f5e";                    // red
+        };
+
+        const CHART_DEFAULTS = {
+            plugins: { legend: { labels: { color: "#94a3b8", font: { family: "Inter", size: 12 } } } },
+            scales: {
+                x: { ticks: { color: "#64748b", font: { family: "Inter", size: 11 } }, grid: { color: "rgba(255,255,255,0.05)" } },
+                y: { ticks: { color: "#64748b", font: { family: "Inter", size: 11 } }, grid: { color: "rgba(255,255,255,0.05)" } },
+            }
+        };
+
+        // ── Fetch data ────────────────────────────────────────────────────
+        async function loadReport() {
+            try {
+                const res  = await fetch("/session-report");
+                const data = await res.json();
+
+                document.getElementById("loadingOverlay").style.opacity = "0";
+                setTimeout(() => document.getElementById("loadingOverlay").style.display = "none", 400);
+                document.getElementById("reportContainer").style.display = "block";
+
+                if (!data.entries || data.entries.length === 0) {
+                    document.getElementById("emptyState").style.display = "block";
+                    return;
+                }
+
+                document.getElementById("reportContent").style.display = "block";
+                renderStats(data.summary);
+                renderAISummary(data.summary.ai_summary);
+                renderStressTimeline(data.entries);
+                renderEmotionPie(data.summary.emotion_counts);
+                renderEmotionStressBar(data.entries);
+                renderStressGauge(data.summary.avg_stress);
+                renderQuestionStressBar(data.entries);
+                renderTimelineTable(data.entries);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById("loadingOverlay").innerHTML =
+                    `<p style="color:#f43f5e">Failed to load report. <a href="/quiz" style="color:#818cf8">Go back →</a></p>`;
+            }
+        }
+
+
+        // ── Summary Stats ─────────────────────────────────────────────────
+        function renderStats(summary) {
+            document.getElementById("statSnapshots").textContent  = summary.emotion_counts
+                ? Object.values(summary.emotion_counts).reduce((a,b) => a+b, 0)
+                : "0";
+            document.getElementById("statAvgStress").textContent  = summary.avg_stress ?? "—";
+            document.getElementById("statPeakStress").textContent = summary.peak_stress ?? "—";
+            const dom = summary.dominant_emotion ?? "unknown";
+            document.getElementById("statDominant").textContent   =
+                `${EMOTION_EMOJI[dom] ?? "🎭"} ${dom}`;
+        }
+
+
+        // ── AI Summary ────────────────────────────────────────────────────
+        function renderAISummary(text) {
+            document.getElementById("aiSpinner").style.display = "none";
+            document.getElementById("aiSummaryText").textContent = text || "No summary available.";
+        }
+
+
+        // ── Stress Over Time (line) ────────────────────────────────────────
+        function renderStressTimeline(entries) {
+            const labels = entries.map((e, i) => {
+                const t = new Date(e.timestamp);
+                return `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}:${String(t.getSeconds()).padStart(2,"0")}`;
+            });
+            const scores = entries.map(e => e.stress_score);
+            const colors = scores.map(STRESS_COLORS);
+
+            new Chart(document.getElementById("stressTimeChart"), {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "Stress Score",
+                        data: scores,
+                        borderColor: "#6366f1",
+                        backgroundColor: "rgba(99,102,241,0.08)",
+                        pointBackgroundColor: colors,
+                        pointBorderColor: colors,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        tension: 0.4,
+                        fill: true,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        ...CHART_DEFAULTS.plugins,
+                        annotation: {
+                            annotations: {
+                                warnLine: {
+                                    type: "line",
+                                    yMin: 7, yMax: 7,
+                                    borderColor: "rgba(244,63,94,0.5)",
+                                    borderWidth: 1.5,
+                                    borderDash: [6, 4],
+                                    label: {
+                                        content: "High Stress",
+                                        display: true,
+                                        color: "#f43f5e",
+                                        font: { size: 10 },
+                                        position: "end",
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ...CHART_DEFAULTS.scales.x },
+                        y: {
+                            ...CHART_DEFAULTS.scales.y,
+                            min: 0, max: 10,
+                            title: { display: true, text: "Stress (1–10)", color: "#64748b" }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        // ── Emotion Distribution (doughnut) ───────────────────────────────
+        function renderEmotionPie(emotionCounts) {
+            const labels = Object.keys(emotionCounts);
+            const values = Object.values(emotionCounts);
+            const palette = [
+                "#6366f1","#8b5cf6","#22d3ee","#10b981",
+                "#f59e0b","#f43f5e","#ec4899","#f97316",
+                "#a3e635","#38bdf8","#e879f9","#fb7185"
+            ];
+
+            new Chart(document.getElementById("emotionPieChart"), {
+                type: "doughnut",
+                data: {
+                    labels: labels.map(l => `${EMOTION_EMOJI[l] ?? "🎭"} ${l}`),
+                    datasets: [{
+                        data: values,
+                        backgroundColor: palette.slice(0, labels.length),
+                        borderWidth: 2,
+                        borderColor: "#12121f",
+                        hoverOffset: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "62%",
+                    plugins: {
+                        legend: {
+                            position: "bottom",
+                            labels: { color: "#94a3b8", font: { family: "Inter", size: 11 }, padding: 12 }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        // ── Avg Stress by Emotion (bar) ────────────────────────────────────
+        function renderEmotionStressBar(entries) {
+            const grouped = {};
+            entries.forEach(e => {
+                if (!grouped[e.emotion]) grouped[e.emotion] = [];
+                grouped[e.emotion].push(e.stress_score);
+            });
+
+            const labels = Object.keys(grouped);
+            const avgs   = labels.map(em => {
+                const scores = grouped[em].filter(s => s > 0);
+                return scores.length ? (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) : 0;
+            });
+
+            new Chart(document.getElementById("emotionStressBar"), {
+                type: "bar",
+                data: {
+                    labels: labels.map(l => `${EMOTION_EMOJI[l] ?? "🎭"} ${l}`),
+                    datasets: [{
+                        label: "Avg Stress",
+                        data: avgs,
+                        backgroundColor: avgs.map(v => STRESS_COLORS(parseFloat(v)) + "cc"),
+                        borderColor:     avgs.map(v => STRESS_COLORS(parseFloat(v))),
+                        borderWidth: 1.5,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { ...CHART_DEFAULTS.plugins, legend: { display: false } },
+                    scales: {
+                        x: { ...CHART_DEFAULTS.scales.x },
+                        y: { ...CHART_DEFAULTS.scales.y, min: 0, max: 10 }
+                    }
+                }
+            });
+        }
+
+
+        // ── Stress Gauge (half-doughnut) ──────────────────────────────────
+        function renderStressGauge(avgStress) {
+            const val  = Math.min(avgStress, 10);
+            const rest = 10 - val;
+
+            new Chart(document.getElementById("stressGauge"), {
+                type: "doughnut",
+                data: {
+                    datasets: [{
+                        data: [val, rest],
+                        backgroundColor: [STRESS_COLORS(val), "rgba(255,255,255,0.06)"],
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: -90,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "72%",
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false },
+                    }
+                },
+                plugins: [{
+                    id: "gaugeLabel",
+                    afterDraw(chart) {
+                        const { ctx, chartArea: { left, right, top, bottom } } = chart;
+                        const cx = (left + right) / 2;
+                        const cy = bottom - 10;
+                        ctx.save();
+                        ctx.textAlign = "center";
+                        ctx.fillStyle = "#e2e8f0";
+                        ctx.font = "bold 28px Inter";
+                        ctx.fillText(val, cx, cy);
+                        ctx.fillStyle = "#64748b";
+                        ctx.font = "12px Inter";
+                        ctx.fillText("avg stress / 10", cx, cy + 20);
+                        ctx.restore();
+                    }
+                }]
+            });
+        }
+
+
+        // ── Stress per Question (horizontal bar) ──────────────────────────
+        function renderQuestionStressBar(entries) {
+            // Average stress per question index
+            const qMap = {};
+            entries.forEach(e => {
+                const q = `Q${(e.question_index ?? 0) + 1}`;
+                if (!qMap[q]) qMap[q] = [];
+                if (e.stress_score > 0) qMap[q].push(e.stress_score);
+            });
+
+            const labels = Object.keys(qMap).sort();
+            const data   = labels.map(q => {
+                const s = qMap[q];
+                return s.length ? (s.reduce((a,b) => a+b, 0) / s.length).toFixed(1) : 0;
+            });
+
+            new Chart(document.getElementById("questionStressBar"), {
+                type: "bar",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "Avg Stress Score",
+                        data,
+                        backgroundColor: data.map(v => STRESS_COLORS(parseFloat(v)) + "bb"),
+                        borderColor:     data.map(v => STRESS_COLORS(parseFloat(v))),
+                        borderWidth: 1.5,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { ...CHART_DEFAULTS.plugins, legend: { display: false } },
+                    scales: {
+                        x: { ...CHART_DEFAULTS.scales.x, min: 0, max: 10 },
+                        y: { ...CHART_DEFAULTS.scales.y },
+                    }
+                }
+            });
+        }
+
+
+        // ── Timeline Table ────────────────────────────────────────────────
+        function renderTimelineTable(entries) {
+            const tbody = document.getElementById("timelineBody");
+            entries.forEach((e, i) => {
+                const t    = new Date(e.timestamp);
+                const time = t.toLocaleTimeString();
+                const sc   = e.stress_score;
+                const col  = STRESS_COLORS(sc);
+                const row  = `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${time}</td>
+                        <td>Q${(e.question_index ?? 0) + 1}</td>
+                        <td>${EMOTION_EMOJI[e.emotion] ?? "🎭"} ${e.emotion}</td>
+                        <td>
+                            <span class="stress-pill" style="background:${col}22; color:${col}">
+                                ${sc}/10
+                            </span>
+                        </td>
+                        <td style="color:#94a3b8; font-style:italic">${e.note || "—"}</td>
+                    </tr>`;
+                tbody.insertAdjacentHTML("beforeend", row);
+            });
+        }
+
+
+        // ── Boot ──────────────────────────────────────────────────────────
+        window.addEventListener("DOMContentLoaded", loadReport);
+    </script>
+
+</body>
+</html>
