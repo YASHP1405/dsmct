@@ -27,4 +27,18 @@ As everyoone hesitate to speak about their mental cnonditin and this will direct
 
 6. Facial recognition and quiz interacrtion :-
  
-In theis feature user will having a 
+In theis feature user will having a  screen with camera acces  and a quiz weill be started and it will assur and on that basis it will be obsered the mood.
+
+7. Mood change and reccomadation:-
+
+It helps user to analyze the changes and mood 
+a summarization of therir daily mood 
+Recommand games, mini activeits and funny motivaltional video
+
+8. Using digital wellbeing  for stress detection:- 
+It is a feature implementation in which we can have an access to early builder models and the thigs and on that basis we can have a mood 
+
+Tech Stack:- 
+
+
+1. 
