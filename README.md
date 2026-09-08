@@ -14,3 +14,17 @@ Feature : -
 In this dashboard faculty  can see pattern and can generate a summary report .
 
 2. Stress Indicator 
+It will be special section where this stress level accordin g to this health and mention condition It will directly indicate bya a stress bar.
+
+3. Schedueal manager :- 
+Here in the exam time they eill upload the sceduel and they will mentioon their daily acivites and on that they will have a generated report of scheduel 
+
+4. Psychological support :
+As everyoone hesitate to speak about their mental cnonditin and this will directly conduct a request or personal meeting on faculty dashboard 
+
+5. Wekly report :-
+ This eill make the list of the tudent haaving highest stress level  student having highest stress level and make easy for faculty to connect.
+
+6. Facial recognition and quiz interacrtion :-
+ 
+In theis feature user will having a 
